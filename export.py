@@ -115,6 +115,8 @@ def model_export(model, filepath, group_size=64):
     p = model.params
     hidden_dim = model.layers[0].feed_forward.w1.weight.shape[0]
     n_kv_heads = p.n_heads if p.n_kv_heads is None else p.n_kv_heads
+    # ensure head_dim in header matches actual model attention head dimension
+    head_dim = model.layers[0].attention.head_dim if hasattr(model.layers[0].attention, 'head_dim') else (p.dim // p.n_heads)
     header = struct.pack(
         "iiiiiiiiii",
         p.dim,
@@ -124,7 +126,7 @@ def model_export(model, filepath, group_size=64):
         n_kv_heads,
         p.vocab_size,
         p.max_seq_len,
-        p.head_dim,
+        head_dim,
         int(shared_classifier),
         group_size
     )
